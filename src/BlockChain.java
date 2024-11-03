@@ -1,3 +1,22 @@
+/**
+ * I acknowledge that I am aware of the academic integrity guidelines of this
+ *  course, and that I worked on this assignment independently without any
+ *  unauthorized help with coding or testing. - Mariam Aziz Gerges Zaki Sorial
+ */
+
+/**
+ * Answer to the exercise in the assignment "The way the hash of the COINBASE transactions is computed in the provided code
+ *  could lead to an issue. Identify the problematic scenario, and search for how the actual
+ *  implementation of Bitcoin prevents it":
+
+ *  Ans: The hash here is computed from one output which includes the value of the coin and the public key only.
+ *  So, if the same public key has multiple coinbase transaction of the same value of the coin,
+ *  they will have the same hash. So, the hash of the transaction doesn't unique here.
+ *  The Bitcoin prevents this by adding one input to the transaction. This input includes prevTxHash as zeros,
+ *  outputIndex set to the maximum value, and the signature must include the height of the current block it's included in it.
+ *  Reference: https://learnmeabitcoin.com/technical/mining/coinbase-transaction/
+ */
+
 // The BlockChain class should maintain only limited block nodes to satisfy the functionality.
 // You should not have all the blocks added to the block chain in memory 
 // as it would cause a memory overflow.

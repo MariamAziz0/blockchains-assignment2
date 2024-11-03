@@ -1,3 +1,9 @@
+/**
+ * I acknowledge that I am aware of the academic integrity guidelines of this
+ *  course, and that I worked on this assignment independently without any
+ *  unauthorized help with coding or testing. - Mariam Aziz Gerges Zaki Sorial
+ */
+
 public class TxHandler {
 
     private UTXOPool utxoPool;

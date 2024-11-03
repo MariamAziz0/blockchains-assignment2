@@ -1,3 +1,6 @@
+import java.security.PublicKey;
+import java.util.HashMap;
+
 /**
  * I acknowledge that I am aware of the academic integrity guidelines of this
  *  course, and that I worked on this assignment independently without any
@@ -27,7 +30,49 @@ public class TxHandler {
      */
     public boolean isValidTx(Transaction tx) {
         // IMPLEMENT THIS
-        return false;
+        double input_values = 0, output_values = 0;
+        HashMap<UTXO, Boolean> takenUTXOs = new HashMap<>();
+        UTXO currentInputUTXO;
+
+        // Check all outputs claimed by {@code tx} are in the current UTXO pool, and no UTXO is claimed multiple times by {@code tx}
+        for (Transaction.Input input : tx.getInputs()) {
+            currentInputUTXO = new UTXO(input.prevTxHash, input.outputIndex);
+
+            if (takenUTXOs.containsKey(currentInputUTXO) || !utxoPool.contains(currentInputUTXO)) {
+                return false;
+            }
+
+            takenUTXOs.put(currentInputUTXO, true);
+            input_values += utxoPool.getTxOutput(currentInputUTXO).value;
+        }
+
+        // Check the signatures on each input of {@code tx} are valid
+        for (int i = 0; i < tx.numInputs(); i++) {
+            Transaction.Input input = tx.getInput(i);
+            currentInputUTXO = new UTXO(input.prevTxHash, input.outputIndex);
+            PublicKey publicKey = utxoPool.getTxOutput(currentInputUTXO).address;
+            byte[] message = tx.getRawDataToSign(i);
+
+            if (!Crypto.verifySignature(publicKey, message, input.signature)) {
+                return false;
+            }
+        }
+
+        // Check all of {@code tx}s output values are non-negative
+        for (Transaction.Output output : tx.getOutputs()) {
+            if (output.value < 0) {
+                return false;
+            }
+
+            output_values += output.value;
+        }
+
+        // Check the sum of {@code tx}s input values is greater than or equal to the sum of its output values
+        if (input_values < output_values) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

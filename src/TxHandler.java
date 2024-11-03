@@ -86,4 +86,8 @@ public class TxHandler {
         return null;
     }
 
+    public UTXOPool getUTXOPool() {
+        return utxoPool;
+    }
+
 }

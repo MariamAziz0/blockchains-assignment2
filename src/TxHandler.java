@@ -82,12 +82,65 @@ public class TxHandler {
      */
     public Transaction[] handleTxs(Transaction[] possibleTxs) {
         // IMPLEMENT THIS
+        boolean[] txIsCheckedArray = new boolean[possibleTxs.length];
+        boolean[] txIsValidArray = new boolean[possibleTxs.length];
+        boolean isFinished = false;
 
-        return null;
+        while (!isFinished) {
+            isFinished = true;
+
+            for (int i = 0; i < possibleTxs.length; i++) {
+                if (!txIsCheckedArray[i]) {
+                    if (isValidTx(possibleTxs[i])) {
+                        txIsValidArray[i] = true;
+
+                        removeUTXOsOfTransaction(possibleTxs[i]);
+                        addUTXOsOfTransaction(possibleTxs[i]);
+                        isFinished = false;
+                    }
+
+                    txIsCheckedArray[i] = true;
+                }
+            }
+        }
+
+        int numberOfValidTransactions = 0;
+        for (int i = 0; i < txIsValidArray.length; i++) {
+            if (txIsValidArray[i]) {
+                numberOfValidTransactions++;
+            }
+        }
+
+        Transaction[] validTransactions = new Transaction[numberOfValidTransactions];
+        int index = 0;
+        for (int i = 0; i < txIsValidArray.length; i++) {
+            if (txIsValidArray[i]) {
+                validTransactions[index] = possibleTxs[i];
+                index++;
+            }
+        }
+
+        return validTransactions;
     }
 
     public UTXOPool getUTXOPool() {
         return utxoPool;
+    }
+
+    private void removeUTXOsOfTransaction(Transaction tx) {
+        UTXO currentInputUTXO;
+        for (Transaction.Input input : tx.getInputs()) {
+            currentInputUTXO = new UTXO(input.prevTxHash, input.outputIndex);
+            utxoPool.removeUTXO(currentInputUTXO);
+        }
+    }
+
+    private void addUTXOsOfTransaction(Transaction tx) {
+        UTXO currentOutputUTXO;
+        for (int i = 0; i < tx.numOutputs(); i++) {
+            currentOutputUTXO = new UTXO(tx.getHash(), i);
+            utxoPool.addUTXO(currentOutputUTXO, tx.getOutput(i));
+        }
     }
 
 }

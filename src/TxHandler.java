@@ -82,7 +82,6 @@ public class TxHandler {
      */
     public Transaction[] handleTxs(Transaction[] possibleTxs) {
         // IMPLEMENT THIS
-        boolean[] txIsCheckedArray = new boolean[possibleTxs.length];
         boolean[] txIsValidArray = new boolean[possibleTxs.length];
         boolean isFinished = false;
 
@@ -90,7 +89,7 @@ public class TxHandler {
             isFinished = true;
 
             for (int i = 0; i < possibleTxs.length; i++) {
-                if (!txIsCheckedArray[i]) {
+                if (!txIsValidArray[i]) {
                     if (isValidTx(possibleTxs[i])) {
                         txIsValidArray[i] = true;
 
@@ -98,8 +97,6 @@ public class TxHandler {
                         addUTXOsOfTransaction(possibleTxs[i]);
                         isFinished = false;
                     }
-
-                    txIsCheckedArray[i] = true;
                 }
             }
         }
@@ -108,6 +105,7 @@ public class TxHandler {
         for (int i = 0; i < txIsValidArray.length; i++) {
             if (txIsValidArray[i]) {
                 numberOfValidTransactions++;
+//                System.out.println("A valid transaction is found at index = " + i);
             }
         }
 

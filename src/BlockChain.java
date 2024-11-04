@@ -21,9 +21,13 @@
 // You should not have all the blocks added to the block chain in memory 
 // as it would cause a memory overflow.
 
+import java.util.ArrayList;
+
 public class BlockChain {
     public static final int CUT_OFF_AGE = 10;
     private TransactionPool transactionPool;
+    private ArrayList<BlockWrapper> blockChainHead;
+    private BlockWrapper maxHeightBlockWrapper;
 
     /**
      * create an empty blockchain with just a genesis block. Assume {@code genesisBlock} is a valid
@@ -32,19 +36,21 @@ public class BlockChain {
     public BlockChain(Block genesisBlock) {
         // IMPLEMENT THIS
         transactionPool = new TransactionPool();
-        // Not Finished
+        blockChainHead = new ArrayList<>();
+        maxHeightBlockWrapper = new BlockWrapper(genesisBlock, 1);
+        blockChainHead.add(maxHeightBlockWrapper);
     }
 
     /** Get the maximum height block */
     public Block getMaxHeightBlock() {
         // IMPLEMENT THIS
-        return null;
+        return maxHeightBlockWrapper.getBlock();
     }
 
     /** Get the UTXOPool for mining a new block on top of max height block */
     public UTXOPool getMaxHeightUTXOPool() {
         // IMPLEMENT THIS
-        return null;
+        return maxHeightBlockWrapper.getUtxoPool();
     }
 
     /** Get the transaction pool to mine a new block */
@@ -78,5 +84,44 @@ public class BlockChain {
     public void addTransaction(Transaction tx) {
         // IMPLEMENT THIS
         transactionPool.addTransaction(tx);
+    }
+
+    // New class BlockWrapper to save more about each block
+    private class BlockWrapper {
+        private Block block;
+        private int height;
+        private ArrayList<BlockWrapper> children;
+        private UTXOPool utxoPool;
+
+        public BlockWrapper(Block block, int height) {
+            this.block = block;
+            this.height = height;
+            this.children = new ArrayList<>();
+            this.utxoPool = new UTXOPool();
+        }
+
+        public Block getBlock() {
+            return block;
+        }
+
+        public int getHeight() {
+            return height;
+        }
+
+        public ArrayList<BlockWrapper> getChildren() {
+            return children;
+        }
+
+        public void addChild(BlockWrapper child) {
+            children.add(child);
+        }
+
+        public UTXOPool getUtxoPool() {
+            return utxoPool;
+        }
+
+        public void setUtxoPool(UTXOPool utxoPool) {
+            this.utxoPool = utxoPool;
+        }
     }
 }

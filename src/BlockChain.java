@@ -37,7 +37,7 @@ public class BlockChain {
         // IMPLEMENT THIS
         transactionPool = new TransactionPool();
         blockChainHead = new ArrayList<>();
-        maxHeightBlockWrapper = new BlockWrapper(genesisBlock, 1);
+        maxHeightBlockWrapper = new BlockWrapper(genesisBlock, 1, getUTXOPoolForBlock(genesisBlock));
         blockChainHead.add(maxHeightBlockWrapper);
     }
 
@@ -83,16 +83,16 @@ public class BlockChain {
             return false;
         }
 
-        if (!isValidBlockTransactions(block, parentBlockWrapper.getUtxoPool())) {
-            return false;
-        }
-
         int currentBlockHeight = parentBlockWrapper.getHeight() + 1;
         if (currentBlockHeight <= maxHeightBlockWrapper.getHeight() - CUT_OFF_AGE) {
             return false;
         }
 
-        // TODO: handling adding the block in the chain (including updating the UTXOPool of the current block to include all transaction outputs with coinbase)
+        if (!isValidBlockTransactions(block, parentBlockWrapper.getUtxoPool())) {
+            return false;
+        }
+
+        handleAddingNewBlock(block, parentBlockWrapper);
         return true;
     }
 
@@ -122,34 +122,85 @@ public class BlockChain {
      * Check for double spending case
      */
     private boolean isValidBlockTransactions(Block block, UTXOPool utxoPool) {
-        boolean coinbaseTransactionFound = false;
         HashMap<UTXO, Boolean> takenUTXOs = new HashMap<>();
         UTXO currentUTXO;
         TxHandler txHandler = new TxHandler(utxoPool);
 
         for (Transaction tx : block.getTransactions()) {
-            if (tx.isCoinbase()) {
-                if (!coinbaseTransactionFound) {
-                    coinbaseTransactionFound = true;
-                }
-                else {
-                    return false;
-                }
-            }
-            else {
-                if (txHandler.isValidTx(tx)) {
-                    for (Transaction.Input input : tx.getInputs()) {
-                        currentUTXO = new UTXO(input.prevTxHash, input.outputIndex);
-                        if (takenUTXOs.containsKey(currentUTXO)) {
-                            return false;
-                        }
-                        takenUTXOs.put(currentUTXO, true);
+
+            if (txHandler.isValidTx(tx)) {
+                for (Transaction.Input input : tx.getInputs()) {
+                    currentUTXO = new UTXO(input.prevTxHash, input.outputIndex);
+                    if (takenUTXOs.containsKey(currentUTXO)) {
+                        return false;
                     }
+                    takenUTXOs.put(currentUTXO, true);
                 }
             }
         }
 
         return true;
+    }
+
+    // May we need to the maxHeightBlock or the blockchainHead, it will depend on the height
+    private void handleAddingNewBlock(Block block, BlockWrapper parentBlockWrapper) {
+        int currentBlockHeight = parentBlockWrapper.getHeight() + 1;
+
+        removeTransactionsFromTransactionPool(block);
+        for (Transaction tx : block.getTransactions()) {
+            for (Transaction.Input input : tx.getInputs()) {
+                parentBlockWrapper.getUtxoPool().removeUTXO(new UTXO(input.prevTxHash, input.outputIndex));
+            }
+        }
+
+        UTXOPool currentBlockUTXOPool = new UTXOPool(parentBlockWrapper.getUtxoPool());
+        currentBlockUTXOPool.addUTXO(new UTXO(block.getCoinbase().getHash(), 0), block.getCoinbase().getOutput(0));
+
+        for (Transaction tx : block.getTransactions()) {
+            for (int i = 0; i < tx.numOutputs(); i++) {
+                currentBlockUTXOPool.addUTXO(new UTXO(tx.getHash(), i), tx.getOutput(i));
+            }
+        }
+
+        BlockWrapper currentBlockWrapper = new BlockWrapper(block, currentBlockHeight, currentBlockUTXOPool);
+        parentBlockWrapper.addChild(currentBlockWrapper);
+
+        updateHeadOrMaxHeightBlock(currentBlockWrapper);
+    }
+
+    private void updateHeadOrMaxHeightBlock(BlockWrapper blockWrapper) {
+        if (blockWrapper.getHeight() > maxHeightBlockWrapper.getHeight()) {
+            maxHeightBlockWrapper = blockWrapper;
+        }
+
+        int currentHeadHeight = blockChainHead.get(0).getHeight();
+        if (maxHeightBlockWrapper.getHeight() - currentHeadHeight >= CUT_OFF_AGE + 1) {
+
+            ArrayList<BlockWrapper> newBlockchainHead = new ArrayList<>();
+            for (BlockWrapper newBlock : blockChainHead) {
+                newBlockchainHead.addAll(newBlock.getChildren());
+            }
+
+            blockChainHead = newBlockchainHead;
+        }
+    }
+
+    private UTXOPool getUTXOPoolForBlock(Block block) {
+        UTXOPool utxoPool = new UTXOPool();
+        utxoPool.addUTXO(new UTXO(block.getCoinbase().getHash(), 0), block.getCoinbase().getOutput(0));
+
+        for (Transaction tx : block.getTransactions()) {
+            for (int i = 0; i < tx.numOutputs(); i++) {
+                utxoPool.addUTXO(new UTXO(tx.getHash(), i), tx.getOutput(i));
+            }
+        }
+        return utxoPool;
+    }
+
+    private void removeTransactionsFromTransactionPool(Block block) {
+        for (Transaction tx : block.getTransactions()) {
+            transactionPool.removeTransaction(tx.getHash());
+        }
     }
 
     // New class BlockWrapper to save more about each block
@@ -159,11 +210,11 @@ public class BlockChain {
         private ArrayList<BlockWrapper> children;
         private UTXOPool utxoPool;
 
-        public BlockWrapper(Block block, int height) {
+        public BlockWrapper(Block block, int height, UTXOPool utxoPool) {
             this.block = block;
             this.height = height;
             this.children = new ArrayList<>();
-            this.utxoPool = new UTXOPool();
+            this.utxoPool = utxoPool;
         }
 
         public Block getBlock() {
@@ -184,10 +235,6 @@ public class BlockChain {
 
         public UTXOPool getUtxoPool() {
             return utxoPool;
-        }
-
-        public void setUtxoPool(UTXOPool utxoPool) {
-            this.utxoPool = utxoPool;
         }
     }
 }

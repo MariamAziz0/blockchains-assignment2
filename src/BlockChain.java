@@ -21,7 +21,7 @@
 // You should not have all the blocks added to the block chain in memory 
 // as it would cause a memory overflow.
 
-import java.util.ArrayList;
+import java.util.*;
 
 public class BlockChain {
     public static final int CUT_OFF_AGE = 10;
@@ -76,7 +76,23 @@ public class BlockChain {
         if (block.getPrevBlockHash() == null) {
             return false;
         }
-        // Not Finished
+
+        BlockWrapper parentBlockWrapper = getParentBlockWrapper(block.getPrevBlockHash());
+
+        if (parentBlockWrapper == null) {
+            return false;
+        }
+
+        if (!isValidBlockTransactions(block, parentBlockWrapper.getUtxoPool())) {
+            return false;
+        }
+
+        int currentBlockHeight = parentBlockWrapper.getHeight() + 1;
+        if (currentBlockHeight <= maxHeightBlockWrapper.getHeight() - CUT_OFF_AGE) {
+            return false;
+        }
+
+        // TODO: handling adding the block in the chain (including updating the UTXOPool of the current block to include all transaction outputs with coinbase)
         return true;
     }
 
@@ -84,6 +100,30 @@ public class BlockChain {
     public void addTransaction(Transaction tx) {
         // IMPLEMENT THIS
         transactionPool.addTransaction(tx);
+    }
+
+    private BlockWrapper getParentBlockWrapper(byte[] parentHash) {
+        Queue<BlockWrapper> blockWrapperQueue = new LinkedList<>(blockChainHead);
+        while (!blockWrapperQueue.isEmpty()) {
+            BlockWrapper blockWrapper = blockWrapperQueue.poll();
+            if (Arrays.equals(blockWrapper.getBlock().getHash(), parentHash)) {
+                return blockWrapper;
+            }
+
+            blockWrapperQueue.addAll(blockWrapper.getChildren());
+        }
+
+        return null;
+    }
+
+    // TODO: Implement this
+    /**
+     * It has only one coinBase transaction
+     * If the transaction is not coinbase, it must have the UTXO in utxoPool
+     * Check for double spending case
+     */
+    private boolean isValidBlockTransactions(Block block, UTXOPool utxoPool) {
+        return false;
     }
 
     // New class BlockWrapper to save more about each block

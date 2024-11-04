@@ -65,7 +65,7 @@ public class BlockChain {
      * the current height of the blockchain.
 	   * <p>
 	   * Assume the Genesis block is at height 1.
-     * For example, you can try creating a new block over the genesis block (i.e. create a block at 
+       * For example, you can try creating a new block over the genesis block (i.e. create a block at
 	   * height 2) if the current blockchain height is less than or equal to CUT_OFF_AGE + 1. As soon as
 	   * the current blockchain height exceeds CUT_OFF_AGE + 1, you cannot create a new block at height 2.
      * 
@@ -116,14 +116,40 @@ public class BlockChain {
         return null;
     }
 
-    // TODO: Implement this
     /**
-     * It has only one coinBase transaction
+     * The block has only one coinBase transaction
      * If the transaction is not coinbase, it must have the UTXO in utxoPool
      * Check for double spending case
      */
     private boolean isValidBlockTransactions(Block block, UTXOPool utxoPool) {
-        return false;
+        boolean coinbaseTransactionFound = false;
+        HashMap<UTXO, Boolean> takenUTXOs = new HashMap<>();
+        UTXO currentUTXO;
+        TxHandler txHandler = new TxHandler(utxoPool);
+
+        for (Transaction tx : block.getTransactions()) {
+            if (tx.isCoinbase()) {
+                if (!coinbaseTransactionFound) {
+                    coinbaseTransactionFound = true;
+                }
+                else {
+                    return false;
+                }
+            }
+            else {
+                if (txHandler.isValidTx(tx)) {
+                    for (Transaction.Input input : tx.getInputs()) {
+                        currentUTXO = new UTXO(input.prevTxHash, input.outputIndex);
+                        if (takenUTXOs.containsKey(currentUTXO)) {
+                            return false;
+                        }
+                        takenUTXOs.put(currentUTXO, true);
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
     // New class BlockWrapper to save more about each block

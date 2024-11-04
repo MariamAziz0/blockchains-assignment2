@@ -127,8 +127,10 @@ public class BlockChain {
         TxHandler txHandler = new TxHandler(utxoPool);
 
         for (Transaction tx : block.getTransactions()) {
+//            System.out.println("In function: " + block + ", " + tx);
 
             if (txHandler.isValidTx(tx)) {
+//                System.out.println("In function: " + block + ", " + tx + " yes valid");
                 for (Transaction.Input input : tx.getInputs()) {
                     currentUTXO = new UTXO(input.prevTxHash, input.outputIndex);
                     if (takenUTXOs.containsKey(currentUTXO)) {
@@ -136,6 +138,9 @@ public class BlockChain {
                     }
                     takenUTXOs.put(currentUTXO, true);
                 }
+            }
+            else {
+                return false;
             }
         }
 

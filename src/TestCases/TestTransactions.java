@@ -60,7 +60,7 @@ public class TestTransactions {
 
         Transaction newTransaction2 = new Transaction();
         newTransaction2.setHash(new byte[]{5, 6, 7});
-        newTransaction2.addInput(transaction.getHash(), 0);
+        newTransaction2.addInput(transaction2.getHash(), 0);
         newTransaction2.addOutput(50, publicKey);
         newTransaction2.addSignature(generateSignature(privateKey, newTransaction2.getRawDataToSign(0)), 0);
 
@@ -82,6 +82,8 @@ public class TestTransactions {
 
         Transaction[] validTransactions = txHandler.handleTxs(transactions);
         System.out.println(Arrays.toString(validTransactions));
+
+        System.out.println(Arrays.equals(validTransactions, transactions));
 
     }
 }

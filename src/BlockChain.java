@@ -126,29 +126,12 @@ public class BlockChain {
      * Check for double spending case
      */
     private boolean isValidBlockTransactions(Block block, UTXOPool utxoPool) {
-        HashMap<UTXO, Boolean> takenUTXOs = new HashMap<>();
-        UTXO currentUTXO;
-        TxHandler txHandler = new TxHandler(utxoPool);
+        TxHandler txHandler = new TxHandler(new UTXOPool(utxoPool));
+        Transaction[] blockTransactions = block.getTransactions().toArray(new Transaction[0]);
 
-        for (Transaction tx : block.getTransactions()) {
-//            System.out.println("In function: " + block + ", " + tx);
+        Transaction[] handledTransactions = txHandler.handleTxs(blockTransactions);
 
-            if (txHandler.isValidTx(tx)) {
-//                System.out.println("In function: " + block + ", " + tx + " yes valid");
-                for (Transaction.Input input : tx.getInputs()) {
-                    currentUTXO = new UTXO(input.prevTxHash, input.outputIndex);
-                    if (takenUTXOs.containsKey(currentUTXO)) {
-                        return false;
-                    }
-                    takenUTXOs.put(currentUTXO, true);
-                }
-            }
-            else {
-                return false;
-            }
-        }
-
-        return true;
+        return Arrays.equals(blockTransactions, handledTransactions);
     }
 
     // May we need to the maxHeightBlock or the blockchainHead, it will depend on the height

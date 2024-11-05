@@ -137,15 +137,15 @@ public class BlockChain {
     // May we need to the maxHeightBlock or the blockchainHead, it will depend on the height
     private void handleAddingNewBlock(Block block, BlockWrapper parentBlockWrapper) {
         int currentBlockHeight = parentBlockWrapper.getHeight() + 1;
+        UTXOPool currentBlockUTXOPool = new UTXOPool(parentBlockWrapper.getUtxoPool());
 
         removeTransactionsFromTransactionPool(block);
         for (Transaction tx : block.getTransactions()) {
             for (Transaction.Input input : tx.getInputs()) {
-                parentBlockWrapper.getUtxoPool().removeUTXO(new UTXO(input.prevTxHash, input.outputIndex));
+                currentBlockUTXOPool.removeUTXO(new UTXO(input.prevTxHash, input.outputIndex));
             }
         }
 
-        UTXOPool currentBlockUTXOPool = new UTXOPool(parentBlockWrapper.getUtxoPool());
         currentBlockUTXOPool.addUTXO(new UTXO(block.getCoinbase().getHash(), 0), block.getCoinbase().getOutput(0));
 
         for (Transaction tx : block.getTransactions()) {

@@ -77,6 +77,10 @@ public class BlockChain {
             return false;
         }
 
+        if (block.getCoinbase().getOutput(0).value != Block.COINBASE) {
+            return false;
+        }
+
         BlockWrapper parentBlockWrapper = getParentBlockWrapper(block.getPrevBlockHash());
 
         if (parentBlockWrapper == null) {

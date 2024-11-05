@@ -77,7 +77,7 @@ public class BlockChain {
             return false;
         }
 
-        if (block.getCoinbase().getOutput(0).value != Block.COINBASE) {
+        if (!isValidCoinBaseTransaction(block.getCoinbase())) {
             return false;
         }
 
@@ -118,6 +118,10 @@ public class BlockChain {
         }
 
         return null;
+    }
+
+    private boolean isValidCoinBaseTransaction(Transaction tx) {
+      return tx.numOutputs() == 1 && tx.getOutput(0).value == Block.COINBASE;
     }
 
     /**

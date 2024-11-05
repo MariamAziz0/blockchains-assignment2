@@ -36,6 +36,9 @@ public class TxHandler {
 
         // Check all outputs claimed by {@code tx} are in the current UTXO pool, and no UTXO is claimed multiple times by {@code tx}
         for (Transaction.Input input : tx.getInputs()) {
+            if (input == null || input.prevTxHash == null) {
+                return false;
+            }
             currentInputUTXO = new UTXO(input.prevTxHash, input.outputIndex);
 
             if (takenUTXOs.containsKey(currentInputUTXO) || !utxoPool.contains(currentInputUTXO)) {
@@ -52,6 +55,10 @@ public class TxHandler {
             currentInputUTXO = new UTXO(input.prevTxHash, input.outputIndex);
             PublicKey publicKey = utxoPool.getTxOutput(currentInputUTXO).address;
             byte[] message = tx.getRawDataToSign(i);
+
+            if (input.signature == null || message == null || publicKey == null) {
+                return false;
+            }
 
             if (!Crypto.verifySignature(publicKey, message, input.signature)) {
                 return false;

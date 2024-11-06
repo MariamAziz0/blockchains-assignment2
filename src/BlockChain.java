@@ -10,10 +10,10 @@
  *  implementation of Bitcoin prevents it":
 
  *  Ans: The hash here is computed from one output which includes the value of the coin and the public key only.
- *  So, if the same public key has multiple coinbase transaction of the same value of the coin,
- *  they will have the same hash. So, the hash of the transaction doesn't unique here.
- *  The Bitcoin prevents this by adding one input to the transaction. This input includes prevTxHash as zeros,
- *  outputIndex set to the maximum value, and the signature must include the height of the current block it's included in it.
+ *  So, if the same public key has multiple coinbase transactions of the same value of the coin,
+ *  they will have the same hash. So, the hash of the transaction isn't unique here.
+ *  Bitcoin prevents this by adding one input to the transaction. This input includes prevTxHash as zeros,
+ *  outputIndex set to the maximum value, and the signature must include the height of the current block it's included in.
  *  Reference: https://learnmeabitcoin.com/technical/mining/coinbase-transaction/
  */
 

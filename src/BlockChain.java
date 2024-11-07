@@ -73,7 +73,7 @@ public class BlockChain {
      */
     public boolean addBlock(Block block) {
         // IMPLEMENT THIS
-        if (block.getPrevBlockHash() == null) {
+        if (block.getPrevBlockHash() == null || block.getHash() == null) {
             return false;
         }
 

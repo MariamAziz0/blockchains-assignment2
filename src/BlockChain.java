@@ -125,11 +125,6 @@ public class BlockChain {
       return tx.numOutputs() == 1 && tx.getOutput(0).value == Block.COINBASE;
     }
 
-    /**
-     * The block has only one coinBase transaction
-     * If the transaction is not coinbase, it must have the UTXO in utxoPool
-     * Check for double spending case
-     */
     private boolean isValidBlockTransactions(Block block, TxHandler txHandler) {
         Transaction[] blockTransactions = block.getTransactions().toArray(new Transaction[0]);
         Transaction[] handledTransactions = txHandler.handleTxs(blockTransactions);
